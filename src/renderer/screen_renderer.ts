@@ -1,24 +1,31 @@
 import screen_shader from "./../shaders/screen_shader.wgsl"
 import { Renderer } from "./data/renderer";
 import { RendererData } from "./data/renderer_data";
+import { ScreenTextureData } from "./data/screen_texture_data";
 
 export class ScreenRenderer implements Renderer
 {
     rendererData: RendererData;
-    color_buffer_view: GPUTextureView;
 
     // Assets
     sampler: GPUSampler;
+    screen_texture_data: ScreenTextureData;
 
     // Pipeline objects
     screen_pipeline: GPURenderPipeline;
     screen_bind_group: GPUBindGroup;
 
-    constructor(rendererData: RendererData, color_buffer_view: GPUTextureView)
+    constructor(rendererData: RendererData, screen_texture_data: ScreenTextureData)
     {
         this.rendererData = rendererData;
-        this.color_buffer_view = color_buffer_view;
+        this.screen_texture_data = screen_texture_data;
 
+        this.createAssets();
+        this.makePipeline();
+    }
+
+    private createAssets()
+    {
         const samplerDescriptor: GPUSamplerDescriptor = {
             addressModeU: "repeat",
             addressModeV: "repeat",
@@ -29,8 +36,6 @@ export class ScreenRenderer implements Renderer
         };
 
         this.sampler = this.rendererData.device.createSampler(samplerDescriptor);
-
-        this.makePipeline();
     }
 
     private makePipeline() 
@@ -60,7 +65,7 @@ export class ScreenRenderer implements Renderer
                 },
                 {
                     binding: 1,
-                    resource: this.color_buffer_view
+                    resource: this.screen_texture_data.color_buffer_view
                 }
             ]
         });

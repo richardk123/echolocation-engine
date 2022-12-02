@@ -2,6 +2,7 @@ import { Scene } from "../data/scene";
 import raytracer_kernel from "./../shaders/raytracer_kernel.wgsl"
 import { Renderer } from "./data/renderer";
 import { RendererData } from "./data/renderer_data";
+import { ScreenTextureData } from "./data/screen_texture_data";
 
 export class EcholocationRenderer implements Renderer
 {
@@ -9,19 +10,19 @@ export class EcholocationRenderer implements Renderer
     scene: Scene;
 
     //Assets
-    color_buffer: GPUTexture;
-    color_buffer_view: GPUTextureView;
-    lineBuffer: GPUBuffer;
+    screen_texture_data: ScreenTextureData;
+    line_buffer: GPUBuffer;
 
     // Pipeline objects
-    ray_tracing_pipeline: GPUComputePipeline
-    ray_tracing_bind_group: GPUBindGroup
+    ray_tracing_pipeline: GPUComputePipeline;
+    ray_tracing_bind_group: GPUBindGroup;
 
 
-    constructor(renderer: RendererData, scene: Scene)
+    constructor(renderer: RendererData, scene: Scene, screen_texture_data: ScreenTextureData)
     {
         this.rendererData = renderer;
         this.scene = scene;
+        this.screen_texture_data = screen_texture_data;
 
         this.createAssets();
         this.makePipeline();
@@ -29,29 +30,15 @@ export class EcholocationRenderer implements Renderer
 
     private createAssets()
     {
-        this.color_buffer = this.rendererData.device.createTexture(
-            {
-                size: {
-                    width: this.rendererData.canvas.width,
-                    height: this.rendererData.canvas.height,
-                },
-                format: "rgba8unorm",
-                usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING
-            }
-        );
-
-        this.color_buffer_view = this.color_buffer.createView();
-
-
         const linesBufferDescriptor: GPUBufferDescriptor = {
             size: 16 * this.scene.lines.length,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
         };
 
-        this.lineBuffer = this.rendererData.device.createBuffer(linesBufferDescriptor);
+        this.line_buffer = this.rendererData.device.createBuffer(linesBufferDescriptor);
     }
 
-    private makePipeline(): {color_buffer: GPUTexture}
+    private makePipeline()
     {
         const ray_tracing_bind_group_layout = this.rendererData.device.createBindGroupLayout({
             entries: [
@@ -80,12 +67,12 @@ export class EcholocationRenderer implements Renderer
             entries: [
                 {
                     binding: 0,
-                    resource: this.color_buffer_view
+                    resource: this.screen_texture_data.color_buffer_view
                 },
                 {
                     binding: 1,
                     resource: {
-                        buffer: this.lineBuffer
+                        buffer: this.line_buffer
                     }
                 }
             ]
@@ -105,8 +92,6 @@ export class EcholocationRenderer implements Renderer
                 entryPoint: 'main',
             },
         });
-
-        return {color_buffer: this.color_buffer};
     }
 
     public render(commandEncoder : GPUCommandEncoder)
@@ -131,6 +116,6 @@ export class EcholocationRenderer implements Renderer
             lineData[4*i + 3] = this.scene.lines[i].y1;
         }
 
-        this.rendererData.device.queue.writeBuffer(this.lineBuffer, 0, lineData, 0, 4 * this.scene.lines.length);
+        this.rendererData.device.queue.writeBuffer(this.line_buffer, 0, lineData, 0, 4 * this.scene.lines.length);
     }
 }

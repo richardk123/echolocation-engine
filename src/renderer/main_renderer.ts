@@ -3,6 +3,7 @@ import { EcholocationRenderer } from "./echo_location_renderer";
 import { RendererData } from "./data/renderer_data";
 import { ScreenRenderer } from "./screen_renderer";
 import { Renderer } from "./data/renderer";
+import { ClearTextureRenderer } from "./clear_texture_renderer";
 
 export class MainRenderer implements RendererData {
 
@@ -25,10 +26,11 @@ export class MainRenderer implements RendererData {
 
         await this.setupDevice();
 
-        const echoLocationRenderer = new EcholocationRenderer(this, this.scene);
-        const screenRenderer = new ScreenRenderer(this, echoLocationRenderer.color_buffer_view);
+        const clearTextureRenderer = new ClearTextureRenderer(this, this.canvas);
+        const echoLocationRenderer = new EcholocationRenderer(this, this.scene, clearTextureRenderer);
+        const screenRenderer = new ScreenRenderer(this, clearTextureRenderer);
 
-        this.render([echoLocationRenderer, screenRenderer]);
+        this.render([clearTextureRenderer, echoLocationRenderer, screenRenderer]);
     }
 
     async setupDevice() 
