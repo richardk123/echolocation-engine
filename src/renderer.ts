@@ -1,9 +1,11 @@
+import { Scene } from "./data/scene";
 import raytracer_kernel from "./shaders/raytracer_kernel.wgsl"
 import screen_shader from "./shaders/screen_shader.wgsl"
 
 export class Renderer {
 
     canvas: HTMLCanvasElement;
+    scene: Scene;
 
     // Device/Context objects
     adapter: GPUAdapter;
@@ -15,6 +17,7 @@ export class Renderer {
     color_buffer: GPUTexture;
     color_buffer_view: GPUTextureView;
     sampler: GPUSampler;
+    lineBuffer: GPUBuffer;
 
     // Pipeline objects
     ray_tracing_pipeline: GPUComputePipeline
@@ -23,8 +26,9 @@ export class Renderer {
     screen_bind_group: GPUBindGroup
 
 
-    constructor(canvas: HTMLCanvasElement){
+    constructor(canvas: HTMLCanvasElement, scene: Scene) {
         this.canvas = canvas;
+        this.scene = scene;
     }
 
    async Initialize() {
@@ -70,6 +74,14 @@ export class Renderer {
                         viewDimension: "2d"
                     }
                 },
+                {
+                    binding: 1,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type: "read-only-storage",
+                        hasDynamicOffset: false
+                    }
+                }
             ]
 
         });
@@ -80,6 +92,12 @@ export class Renderer {
                 {
                     binding: 0,
                     resource: this.color_buffer_view
+                },
+                {
+                    binding: 1,
+                    resource: {
+                        buffer: this.lineBuffer
+                    }
                 }
             ]
         });
@@ -186,23 +204,45 @@ export class Renderer {
             maxAnisotropy: 1
         };
         this.sampler = this.device.createSampler(samplerDescriptor);
+
+        const linesBufferDescriptor: GPUBufferDescriptor = {
+            size: 16 * this.scene.lines.length,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        };
+
+        this.lineBuffer = this.device.createBuffer(linesBufferDescriptor);
+    }
+
+    prepareScene()
+    {
+        const lineData: Int32Array = new Int32Array(4 * this.scene.lines.length);
+        for (let i = 0; i < this.scene.lines.length; i++) {
+            lineData[4*i] = this.scene.lines[i].x0;
+            lineData[4*i + 1] = this.scene.lines[i].y0;
+            lineData[4*i + 2] = this.scene.lines[i].x1;
+            lineData[4*i + 3] = this.scene.lines[i].y1;
+        }
+
+        this.device.queue.writeBuffer(this.lineBuffer, 0, lineData, 0, 4 * this.scene.lines.length);
     }
 
     render = () => {
+
+        this.prepareScene();
 
         const commandEncoder : GPUCommandEncoder = this.device.createCommandEncoder();
 
         const ray_trace_pass : GPUComputePassEncoder = commandEncoder.beginComputePass();
         ray_trace_pass.setPipeline(this.ray_tracing_pipeline);
         ray_trace_pass.setBindGroup(0, this.ray_tracing_bind_group);
-        ray_trace_pass.dispatchWorkgroups(this.canvas.width, this.canvas.height, 1);
+        ray_trace_pass.dispatchWorkgroups(this.scene.lines.length, 1, 1);
         ray_trace_pass.end();
 
         const textureView : GPUTextureView = this.context.getCurrentTexture().createView();
         const renderpass : GPURenderPassEncoder = commandEncoder.beginRenderPass({
             colorAttachments: [{
                 view: textureView,
-                clearValue: {r: 0.5, g: 0.0, b: 0.25, a: 1.0},
+                clearValue: {r: 0, g: 0, b: 0, a: 1.0},
                 loadOp: "clear",
                 storeOp: "store"
             }]
