@@ -1,3 +1,4 @@
+import { Renderer } from "./renderer";
 import shader from "./shaders/shaders.wgsl";
 import { TriangleMesh } from "./triangle_mesh";
 
@@ -5,7 +6,7 @@ const compatibility_elem : HTMLElement = <HTMLElement> document.getElementById("
 
 if (navigator.gpu)
 {
-    compatibility_elem.innerText = "workss!";
+    compatibility_elem.innerText = "works!";
 }
 else
 {
@@ -93,4 +94,6 @@ const Initialize = async() => {
     device.queue.submit([commandEncoder.finish()]);
 }
 
-Initialize();
+// Initialize();
+
+new Renderer(<HTMLCanvasElement> document.getElementById("gfx-main")).Initialize();

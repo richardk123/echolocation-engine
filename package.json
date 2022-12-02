@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "tscw": "tsc --watch",
     "watch": "webpack --watch"
   },
   "repository": {
