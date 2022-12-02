@@ -1,5 +1,5 @@
 import { Scene } from "./data/scene";
-import { Renderer } from "./renderer";
+import { MainRenderer } from "./renderer/main_renderer";
 
 const compatibility_elem : HTMLElement = <HTMLElement> document.getElementById("compatibility-check");
 
@@ -26,4 +26,4 @@ setInterval(() =>
         })
 }, 10);
 
-new Renderer(canvas, scene).Initialize();
+new MainRenderer(canvas, scene).Initialize();
