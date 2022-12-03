@@ -39,7 +39,7 @@ export class EcholocationRenderer implements Renderer
         this.line_buffer = this.rendererData.device.createBuffer(linesBufferDescriptor);
 
         const scaneParameterBufferDescriptor: GPUBufferDescriptor = {
-            size: 16,
+            size: 24,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         };
         this.scene_parameters = this.rendererData.device.createBuffer(
@@ -124,7 +124,9 @@ export class EcholocationRenderer implements Renderer
         const echo_location_pass : GPUComputePassEncoder = commandEncoder.beginComputePass();
         echo_location_pass.setPipeline(this.echo_location_pipeline);
         echo_location_pass.setBindGroup(0, this.echo_location_bind_group);
-        echo_location_pass.dispatchWorkgroups(this.scene.lines.length, 1, 1);
+        
+        const workerCount = ((2 * this.rendererData.canvas.width) + (2* this.rendererData.canvas.height)) * this.rendererData.scene.reflectionCount;
+        echo_location_pass.dispatchWorkgroups(workerCount, 1, 1);
         echo_location_pass.end();
     }
 
@@ -151,9 +153,11 @@ export class EcholocationRenderer implements Renderer
                     this.scene.playerPos[0],
                     this.scene.playerPos[1],
                     this.rendererData.canvas.width,
-                    this.rendererData.canvas.height
+                    this.rendererData.canvas.height,
+                    this.scene.reflectionCount,
+                    this.scene.lines.length,
                 ]
-            ), 0, 4
+            ), 0, 6
         )
     }
 }

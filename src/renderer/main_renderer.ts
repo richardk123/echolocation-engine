@@ -23,7 +23,6 @@ export class MainRenderer implements RendererData {
 
    async Initialize() 
    {
-
         await this.setupDevice();
 
         const clearTextureRenderer = new ClearTextureRenderer(this, this.canvas);
