@@ -8,6 +8,7 @@ let scene = new Scene();
 scene.setPlayerPos(400, 300);
 scene.setRayCount(20000);
 scene.addLine(100, 100, 100, 200);
+scene.addLine(90, 90, 500, 90);
 scene.addLine(300, 100, 300, 200);
 scene.addLine(500, 200, 700, 100);
 

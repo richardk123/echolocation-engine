@@ -23,7 +23,7 @@ struct Ray
 struct HitResult
 {
     hit: bool,
-    point: vec2<i32>,
+    point: vec2<f32>,
 }
 
 @group(0) @binding(0) var color_buffer: texture_storage_2d<rgba8unorm, write>;
@@ -34,14 +34,25 @@ struct HitResult
 fn main(@builtin(global_invocation_id) id : vec3<u32>) 
 {
     let ray: Ray = initRay(i32(id.x));
+    var closestHitResult: HitResult;
+    var closestDistance: f32 = 99999999999;
 
     for (var i: u32 = 0; i < u32(scene.lineCount); i++) 
     {
         let hitResult: HitResult = lineIntersection(ray, data.lines[i]);
         if (hitResult.hit)
         {
-            textureStore(color_buffer, vec2<u32>(u32(hitResult.point.x), u32(hitResult.point.y)), vec4<f32>(1.0, 1.0, 0, 1.0));
+            let distance = distanceSquared(hitResult.point, ray.origin);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestHitResult = hitResult;
+            }
         }
+    }
+    if (closestHitResult.hit)
+    {
+        textureStore(color_buffer, vec2<u32>(u32(closestHitResult.point.x), u32(closestHitResult.point.y)), vec4<f32>(1.0, 1.0, 0, 1.0));
     }
 
     textureStore(color_buffer, vec2<u32>(u32(ray.destination.x), u32(ray.destination.y)), vec4<f32>(1.0, 0, 0, 1.0));
@@ -85,7 +96,7 @@ fn lineIntersection(ray: Ray, line: Line) -> HitResult
     if (s >= 0.0 && s <= 1.0 && t >= 0.0 && t <= 1.0)
     {
         //Projection
-        hitResult.point = vec2<i32>(i32(p1.x + f32(t * v1.x)), i32(p1.y + f32(t * v1.y)));
+        hitResult.point = vec2<f32>(p1.x + (t * v1.x), p1.y + (t * v1.y));
         hitResult.hit = true;
         return hitResult;
     }
@@ -116,4 +127,9 @@ fn vec2I32toVec2F32(v: vec2<i32>) -> vec2<f32>
 fn cross2D(v1: vec2<f32>, v2: vec2<f32>) -> f32
 {
     return v1.x * v2.y - v1.y * v2.x;
+}
+
+fn distanceSquared(p1: vec2<f32>, p2: vec2<f32>) -> f32
+{
+    return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y);
 }
