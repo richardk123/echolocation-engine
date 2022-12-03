@@ -132,7 +132,7 @@ export class EcholocationRenderer implements Renderer
 
     private setLines()
     {
-        const lineData: Int32Array = new Int32Array(4 * this.scene.lines.length);
+        const lineData: Float32Array = new Float32Array(4 * this.scene.lines.length);
         for (let i = 0; i < this.scene.lines.length; i++) 
         {
             lineData[4*i] = this.scene.lines[i].x0;

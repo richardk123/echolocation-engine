@@ -1,6 +1,6 @@
 struct Line {
-    p1: vec2<i32>,
-    p2: vec2<i32>,
+    p1: vec2<f32>,
+    p2: vec2<f32>,
 }
 
 struct Data {
@@ -16,7 +16,7 @@ struct SceneData {
 
 struct Ray
 {
-    origin: vec2<i32>,
+    origin: vec2<f32>,
     destination: vec2<f32>,
 }
 
@@ -57,10 +57,10 @@ fn lineIntersection(ray: Ray, line: Line) -> HitResult
 {
     var hitResult: HitResult;
 
-    let p1 = vec2I32toVec2F32(ray.origin);
+    let p1 = ray.origin;
     let p2 = ray.destination;
-    let p3 = vec2I32toVec2F32(line.p1);
-    let p4 = vec2I32toVec2F32(line.p2);
+    let p3 = line.p1;
+    let p4 = line.p2;
 
     //Line 1 Vector
     let v1 = p2 - p1;
@@ -96,7 +96,7 @@ fn lineIntersection(ray: Ray, line: Line) -> HitResult
 fn initRay(index: i32) -> Ray
 {
     var ray: Ray;
-    ray.origin = scene.listenerPos;
+    ray.origin = vec2I32toVec2F32(scene.listenerPos);
 
     // ray index
     let rightTopCornerIndex = scene.screenDimension.x * scene.reflectionCount;
@@ -108,23 +108,23 @@ fn initRay(index: i32) -> Ray
 
     if (index < rightTopCornerIndex)
     {
-        circuitX = f32(index / scene.reflectionCount);
+        circuitX = f32(index) / f32(scene.reflectionCount);
         circuity = 0.0;
     }
     else if (index < rightBottomCornerIndex)
     {
         circuitX = f32(scene.screenDimension.x);
-        circuity = f32((index - rightTopCornerIndex) / scene.reflectionCount);
+        circuity = f32(index - rightTopCornerIndex) / f32(scene.reflectionCount);
     }
     else if (index < leftBottomCornerIndex)
     {
-        circuitX = f32((index - rightBottomCornerIndex) / scene.reflectionCount);
+        circuitX = f32(index - rightBottomCornerIndex) / f32(scene.reflectionCount);
         circuity = f32(scene.screenDimension.y);
     }
     else
     {
         circuitX = 0.0;
-        circuity = f32((index - leftBottomCornerIndex) / scene.reflectionCount);
+        circuity = f32(index - leftBottomCornerIndex) / f32(scene.reflectionCount);
     }
 
     ray.destination = vec2<f32>(circuitX, circuity);
