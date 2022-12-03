@@ -1,5 +1,5 @@
 import { Scene } from "../data/scene";
-import raytracer_kernel from "./../shaders/raytracer_kernel.wgsl"
+import echo_location_kernel from "./../shaders/echo_location_kernel.wgsl"
 import { Renderer } from "./data/renderer";
 import { RendererData } from "./data/renderer_data";
 import { ScreenTextureData } from "./data/screen_texture_data";
@@ -12,10 +12,11 @@ export class EcholocationRenderer implements Renderer
     //Assets
     screen_texture_data: ScreenTextureData;
     line_buffer: GPUBuffer;
+    scene_parameters: GPUBuffer;
 
     // Pipeline objects
-    ray_tracing_pipeline: GPUComputePipeline;
-    ray_tracing_bind_group: GPUBindGroup;
+    echo_location_pipeline: GPUComputePipeline;
+    echo_location_bind_group: GPUBindGroup;
 
 
     constructor(renderer: RendererData, scene: Scene, screen_texture_data: ScreenTextureData)
@@ -36,11 +37,19 @@ export class EcholocationRenderer implements Renderer
         };
 
         this.line_buffer = this.rendererData.device.createBuffer(linesBufferDescriptor);
+
+        const scaneParameterBufferDescriptor: GPUBufferDescriptor = {
+            size: 16,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        };
+        this.scene_parameters = this.rendererData.device.createBuffer(
+            scaneParameterBufferDescriptor
+        );
     }
 
     private makePipeline()
     {
-        const ray_tracing_bind_group_layout = this.rendererData.device.createBindGroupLayout({
+        const echo_location_bind_group_layout = this.rendererData.device.createBindGroupLayout({
             entries: [
                 {
                     binding: 0,
@@ -58,12 +67,19 @@ export class EcholocationRenderer implements Renderer
                         type: "read-only-storage",
                         hasDynamicOffset: false
                     }
-                }
+                },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: {
+                        type: "uniform",
+                    }
+                },
             ]
         });
     
-        this.ray_tracing_bind_group = this.rendererData.device.createBindGroup({
-            layout: ray_tracing_bind_group_layout,
+        this.echo_location_bind_group = this.rendererData.device.createBindGroup({
+            layout: echo_location_bind_group_layout,
             entries: [
                 {
                     binding: 0,
@@ -74,20 +90,26 @@ export class EcholocationRenderer implements Renderer
                     resource: {
                         buffer: this.line_buffer
                     }
-                }
+                },
+                {
+                    binding: 2,
+                    resource: {
+                        buffer: this.scene_parameters,
+                    }
+                },
             ]
         });
         
-        const ray_tracing_pipeline_layout = this.rendererData.device.createPipelineLayout({
-            bindGroupLayouts: [ray_tracing_bind_group_layout]
+        const echo_location_pipeline_layout = this.rendererData.device.createPipelineLayout({
+            bindGroupLayouts: [echo_location_bind_group_layout]
         });
 
-        this.ray_tracing_pipeline = this.rendererData.device.createComputePipeline({
-            layout: ray_tracing_pipeline_layout,
+        this.echo_location_pipeline = this.rendererData.device.createComputePipeline({
+            layout: echo_location_pipeline_layout,
             
             compute: {
                     module: this.rendererData.device.createShaderModule({
-                    code: raytracer_kernel,
+                    code: echo_location_kernel,
                 }),
                 entryPoint: 'main',
             },
@@ -97,15 +119,16 @@ export class EcholocationRenderer implements Renderer
     public render(commandEncoder : GPUCommandEncoder)
     {
         this.setLines();
+        this.setSceneData();
 
-        const ray_trace_pass : GPUComputePassEncoder = commandEncoder.beginComputePass();
-        ray_trace_pass.setPipeline(this.ray_tracing_pipeline);
-        ray_trace_pass.setBindGroup(0, this.ray_tracing_bind_group);
-        ray_trace_pass.dispatchWorkgroups(this.scene.lines.length, 1, 1);
-        ray_trace_pass.end();
+        const echo_location_pass : GPUComputePassEncoder = commandEncoder.beginComputePass();
+        echo_location_pass.setPipeline(this.echo_location_pipeline);
+        echo_location_pass.setBindGroup(0, this.echo_location_bind_group);
+        echo_location_pass.dispatchWorkgroups(this.scene.lines.length, 1, 1);
+        echo_location_pass.end();
     }
 
-    setLines()
+    private setLines()
     {
         const lineData: Int32Array = new Int32Array(4 * this.scene.lines.length);
         for (let i = 0; i < this.scene.lines.length; i++) 
@@ -117,5 +140,20 @@ export class EcholocationRenderer implements Renderer
         }
 
         this.rendererData.device.queue.writeBuffer(this.line_buffer, 0, lineData, 0, 4 * this.scene.lines.length);
+    }
+
+    private setSceneData()
+    {
+        this.rendererData.device.queue.writeBuffer(
+            this.scene_parameters, 0,
+            new Int32Array(
+                [
+                    this.scene.playerPos[0],
+                    this.scene.playerPos[1],
+                    this.rendererData.canvas.width,
+                    this.rendererData.canvas.height
+                ]
+            ), 0, 4
+        )
     }
 }

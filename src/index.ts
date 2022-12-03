@@ -13,10 +13,15 @@ else
 }
 
 const canvas = <HTMLCanvasElement> document.getElementById("gfx-main");
+
 let scene = new Scene();
-scene.addLine(100, 100, 100, 200);
-scene.addLine(200, 200, 200, 300);
-scene.addLine(300, 300, 300, 400);
+
+scene.setPlayerPos(1, 0);
+
+for(let i = 0; i < 10; i++)
+{
+    scene.addLine(i, i, i + 10, i + 10);
+}
 
 setInterval(() =>
 {
