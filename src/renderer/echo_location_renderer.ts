@@ -125,7 +125,7 @@ export class EcholocationRenderer implements Renderer
         echo_location_pass.setPipeline(this.echo_location_pipeline);
         echo_location_pass.setBindGroup(0, this.echo_location_bind_group);
         
-        const workerCount = ((2 * this.rendererData.canvas.width) + (2* this.rendererData.canvas.height)) * this.rendererData.scene.reflectionCount;
+        const workerCount = this.rendererData.scene.rayCount;
         echo_location_pass.dispatchWorkgroups(workerCount, 1, 1);
         echo_location_pass.end();
     }
@@ -154,7 +154,7 @@ export class EcholocationRenderer implements Renderer
                     this.scene.playerPos[1],
                     this.rendererData.canvas.width,
                     this.rendererData.canvas.height,
-                    this.scene.reflectionCount,
+                    this.scene.rayCount,
                     this.scene.lines.length,
                 ]
             ), 0, 6

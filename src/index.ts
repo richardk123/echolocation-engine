@@ -6,7 +6,7 @@ const canvas = <HTMLCanvasElement> document.getElementById("gfx-main");
 let scene = new Scene();
 
 scene.setPlayerPos(400, 300);
-scene.setReflectionCount(4);
+scene.setRayCount(20000);
 scene.addLine(100, 100, 100, 200);
 scene.addLine(300, 100, 300, 200);
 scene.addLine(500, 200, 700, 100);

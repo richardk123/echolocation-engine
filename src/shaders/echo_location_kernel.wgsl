@@ -10,7 +10,7 @@ struct Data {
 struct SceneData {
     listenerPos: vec2<i32>,
     screenDimension: vec2<i32>,
-    reflectionCount: i32,
+    rayCount: i32,
     lineCount: i32,
 }
 
@@ -97,37 +97,11 @@ fn initRay(index: i32) -> Ray
 {
     var ray: Ray;
     ray.origin = vec2I32toVec2F32(scene.listenerPos);
+    const pi: f32 = 3.1415;
 
-    // ray index
-    let rightTopCornerIndex = scene.screenDimension.x * scene.reflectionCount;
-    let rightBottomCornerIndex = rightTopCornerIndex + (scene.screenDimension.y * scene.reflectionCount);
-    let leftBottomCornerIndex = rightBottomCornerIndex + (scene.screenDimension.x * scene.reflectionCount);
-
-    var circuitX: f32 = 0;
-    var circuity: f32 = 0;
-
-    if (index < rightTopCornerIndex)
-    {
-        circuitX = f32(index) / f32(scene.reflectionCount);
-        circuity = 0.0;
-    }
-    else if (index < rightBottomCornerIndex)
-    {
-        circuitX = f32(scene.screenDimension.x);
-        circuity = f32(index - rightTopCornerIndex) / f32(scene.reflectionCount);
-    }
-    else if (index < leftBottomCornerIndex)
-    {
-        circuitX = f32(index - rightBottomCornerIndex) / f32(scene.reflectionCount);
-        circuity = f32(scene.screenDimension.y);
-    }
-    else
-    {
-        circuitX = 0.0;
-        circuity = f32(index - leftBottomCornerIndex) / f32(scene.reflectionCount);
-    }
-
-    ray.destination = vec2<f32>(circuitX, circuity);
+    let x = sin((((2 * pi) / f32(scene.rayCount)) * f32(index)) - pi) * (f32(scene.screenDimension.x) + f32(scene.screenDimension.y));
+    let y = cos((((2 * pi) / f32(scene.rayCount)) * f32(index)) - pi) * (f32(scene.screenDimension.x) + f32(scene.screenDimension.y));
+    ray.destination = vec2<f32>(x, y);
 
     return ray;
 }
