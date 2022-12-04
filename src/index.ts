@@ -7,9 +7,9 @@ let scene = new Scene();
 
 scene.setPlayerPos(400, 300);
 scene.setRayCount(20000);
-scene.addLine(100, 100, 100, 200);
-scene.addLine(90, 90, 500, 90);
-scene.addLine(300, 100, 300, 200);
-scene.addLine(500, 200, 700, 100);
+
+scene.addLine(500, 100, 600, 200);
+let line = scene.addLine(400, 100, 400, 200);
+line.emmiting = true;
 
 new MainRenderer(canvas, scene).Initialize();

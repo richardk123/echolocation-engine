@@ -1,6 +1,7 @@
 struct Line {
     p1: vec2<f32>,
     p2: vec2<f32>,
+    soundSource: f32,
 }
 
 struct Data {
@@ -24,6 +25,7 @@ struct HitResult
 {
     hit: bool,
     point: vec2<f32>,
+    line: Line,
 }
 
 @group(0) @binding(0) var color_buffer: texture_storage_2d<rgba8unorm, write>;
@@ -33,8 +35,64 @@ struct HitResult
 @compute @workgroup_size(1,1,1)
 fn main(@builtin(global_invocation_id) id : vec3<u32>) 
 {
-    let ray: Ray = initRay(i32(id.x));
+    var ray: Ray = initRay(i32(id.x));
+    var hitResult = findClosestIntersection(ray);
+
+    if (hitResult.hit)
+    {
+        // reflect ray if it is not sound source
+        if (hitResult.line.soundSource == 0)
+        {
+            ray = rayReflection(ray, hitResult);
+            hitResult = findClosestIntersection(ray);
+
+            if (hitResult.hit)
+            {
+                textureStore(color_buffer, vec2<u32>(u32(hitResult.point.x), u32(hitResult.point.y)), vec4<f32>(1.0, 1.0, 0, 1.0));
+            }
+        }
+        else
+        {
+            textureStore(color_buffer, vec2<u32>(u32(hitResult.point.x), u32(hitResult.point.y)), vec4<f32>(1.0, 1.0, 0, 1.0));
+        }
+    }
+
+    // textureStore(color_buffer, vec2<u32>(u32(ray.destination.x), u32(ray.destination.y)), vec4<f32>(1.0, 0, 0, 1.0));
+    // textureStore(color_buffer, vec2<u32>(u32(ray.origin.x), u32(ray.origin.y)), vec4<f32>(1.0, 1, 1, 1.0));
+
+    // textureStore(color_buffer, vec2<u32>(u32(data.lines[0].p1.x), u32(data.lines[0].p1.y)), vec4<f32>(0.1, 0.8, 1.0, 1.0));
+    // textureStore(color_buffer, vec2<u32>(u32(data.lines[0].p2.x), u32(data.lines[0].p2.y)), vec4<f32>(0.1, 0.8, 1.0, 1.0));
+}
+
+fn rayReflection(ray: Ray, hitResult: HitResult) -> Ray
+{
+    let normal = findLineNormal(hitResult.line);
+    
+    let rayX = ray.destination.x - hitResult.point.x;
+    let rayY = ray.destination.y - hitResult.point.y;
+
+    let dotProduct = (rayX * normal.x) + (rayY * normal.y);
+
+    let dotNormalX = dotProduct * normal.x;
+    let dotNormalY = dotProduct * normal.y;
+
+    // calculate and resize new ray destination
+    let screenSize = f32(scene.screenDimension.x) + f32(scene.screenDimension.y);
+    let reflectedRayX = (ray.destination.x - (dotNormalX * 2)) * screenSize;
+    let reflectedRayY = (ray.destination.y - (dotNormalY * 2)) * screenSize;
+
+    var reflectedRay: Ray;
+    reflectedRay.origin = hitResult.point;
+    reflectedRay.destination = vec2<f32>(reflectedRayX, reflectedRayY);
+
+    return reflectedRay;
+}
+
+fn findClosestIntersection(ray: Ray) -> HitResult
+{
     var closestHitResult: HitResult;
+    closestHitResult.hit = false;
+
     var closestDistance: f32 = 99999999999;
 
     for (var i: u32 = 0; i < u32(scene.lineCount); i++) 
@@ -46,20 +104,14 @@ fn main(@builtin(global_invocation_id) id : vec3<u32>)
             if (distance < closestDistance)
             {
                 closestDistance = distance;
+                closestHitResult.hit = true;
+                closestHitResult.line = data.lines[i];
                 closestHitResult = hitResult;
             }
         }
     }
-    if (closestHitResult.hit)
-    {
-        textureStore(color_buffer, vec2<u32>(u32(closestHitResult.point.x), u32(closestHitResult.point.y)), vec4<f32>(1.0, 1.0, 0, 1.0));
-    }
 
-    textureStore(color_buffer, vec2<u32>(u32(ray.destination.x), u32(ray.destination.y)), vec4<f32>(1.0, 0, 0, 1.0));
-    textureStore(color_buffer, vec2<u32>(u32(ray.origin.x), u32(ray.origin.y)), vec4<f32>(1.0, 1, 1, 1.0));
-
-    textureStore(color_buffer, vec2<u32>(u32(data.lines[0].p1.x), u32(data.lines[0].p1.y)), vec4<f32>(0.1, 0.8, 1.0, 1.0));
-    textureStore(color_buffer, vec2<u32>(u32(data.lines[0].p2.x), u32(data.lines[0].p2.y)), vec4<f32>(0.1, 0.8, 1.0, 1.0));
+    return closestHitResult;
 }
 
 //Line intersection algorithm
@@ -132,4 +184,14 @@ fn cross2D(v1: vec2<f32>, v2: vec2<f32>) -> f32
 fn distanceSquared(p1: vec2<f32>, p2: vec2<f32>) -> f32
 {
     return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y);
+}
+
+fn findLineNormal(line: Line) -> vec2<f32>
+{
+    let normalY = line.p2.x - line.p1.x;
+    let normalX = line.p1.y - line.p2.y;
+    let normalLength = sqrt(normalX * normalX + normalY * normalY);
+
+
+    return vec2<f32>(normalX / normalLength, normalY / normalLength);
 }

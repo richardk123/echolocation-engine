@@ -32,7 +32,7 @@ export class EcholocationRenderer implements Renderer
     private createAssets()
     {
         const linesBufferDescriptor: GPUBufferDescriptor = {
-            size: 16 * this.scene.lines.length,
+            size: 20 * this.scene.lines.length,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
         };
 
@@ -132,16 +132,17 @@ export class EcholocationRenderer implements Renderer
 
     private setLines()
     {
-        const lineData: Float32Array = new Float32Array(4 * this.scene.lines.length);
+        const lineData: Float32Array = new Float32Array(5 * this.scene.lines.length);
         for (let i = 0; i < this.scene.lines.length; i++) 
         {
             lineData[4*i] = this.scene.lines[i].x0;
             lineData[4*i + 1] = this.scene.lines[i].y0;
             lineData[4*i + 2] = this.scene.lines[i].x1;
             lineData[4*i + 3] = this.scene.lines[i].y1;
+            lineData[4*i + 4] = this.scene.lines[i].data[4];
         }
 
-        this.rendererData.device.queue.writeBuffer(this.line_buffer, 0, lineData, 0, 4 * this.scene.lines.length);
+        this.rendererData.device.queue.writeBuffer(this.line_buffer, 0, lineData, 0, 5 * this.scene.lines.length);
     }
 
     private setSceneData()
