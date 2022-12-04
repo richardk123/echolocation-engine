@@ -9,12 +9,12 @@ export class Line
 
     get emmiting(): boolean
     {
-        return this.data[4] == 0;
+        return this.data[4] == 0.0;
     }
 
     set emmiting(value: boolean)
     {
-        this.data[4] = value ? 1 : 0;
+        this.data[4] = value ? 1.0 : 0.0;
     }
 
     get x0(): number

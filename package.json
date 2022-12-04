@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
+    "start": "cd ./dist && live-server --entry-file='./dist' --browser='/Applications/Google Chrome Canary.app/'",
     "watch": "webpack --watch"
   },
   "repository": {
@@ -32,6 +33,7 @@
     "webpack-dev-server": "^4.11.1"
   },
   "dependencies": {
-    "gl-matrix": "^3.4.3"
+    "gl-matrix": "^3.4.3",
+    "live-server": "^1.2.2"
   }
 }

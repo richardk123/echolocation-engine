@@ -21,7 +21,7 @@ export class MainRenderer implements RendererData {
         this.scene = scene;
     }
 
-   async Initialize() 
+   async initialize()
    {
         await this.setupDevice();
 

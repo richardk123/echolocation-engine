@@ -32,14 +32,14 @@ export class EcholocationRenderer implements Renderer
     private createAssets()
     {
         const linesBufferDescriptor: GPUBufferDescriptor = {
-            size: 20 * this.scene.lines.length,
+            size: 24 * this.scene.lines.length,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
         };
 
         this.line_buffer = this.rendererData.device.createBuffer(linesBufferDescriptor);
 
         const scaneParameterBufferDescriptor: GPUBufferDescriptor = {
-            size: 24,
+            size: 32,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         };
         this.scene_parameters = this.rendererData.device.createBuffer(
@@ -132,17 +132,19 @@ export class EcholocationRenderer implements Renderer
 
     private setLines()
     {
-        const lineData: Float32Array = new Float32Array(5 * this.scene.lines.length);
+        const dataCount = 6;
+        const lineData: Float32Array = new Float32Array(dataCount * this.scene.lines.length);
         for (let i = 0; i < this.scene.lines.length; i++) 
         {
-            lineData[4*i] = this.scene.lines[i].x0;
-            lineData[4*i + 1] = this.scene.lines[i].y0;
-            lineData[4*i + 2] = this.scene.lines[i].x1;
-            lineData[4*i + 3] = this.scene.lines[i].y1;
-            lineData[4*i + 4] = this.scene.lines[i].data[4];
+            lineData[dataCount*i] = this.scene.lines[i].x0;
+            lineData[dataCount*i + 1] = this.scene.lines[i].y0;
+            lineData[dataCount*i + 2] = this.scene.lines[i].x1;
+            lineData[dataCount*i + 3] = this.scene.lines[i].y1;
+            lineData[dataCount*i + 4] = this.scene.lines[i].data[4];
+            lineData[dataCount*i + 5] = 0;
         }
 
-        this.rendererData.device.queue.writeBuffer(this.line_buffer, 0, lineData, 0, 5 * this.scene.lines.length);
+        this.rendererData.device.queue.writeBuffer(this.line_buffer, 0, lineData, 0, dataCount * this.scene.lines.length);
     }
 
     private setSceneData()
@@ -157,8 +159,10 @@ export class EcholocationRenderer implements Renderer
                     this.rendererData.canvas.height,
                     this.scene.rayCount,
                     this.scene.lines.length,
+                    this.scene.reflectionCount,
+                    0
                 ]
-            ), 0, 6
+            ), 0, 8
         )
     }
 }

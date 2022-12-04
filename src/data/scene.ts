@@ -5,11 +5,18 @@ export class Scene
     lines = Array<Line>();
     playerPos: Float32Array;
     rayCount: number;
+    reflectionCount: number;
 
     constructor()
     {
         this.playerPos = new Float32Array([0, 0]);
         this.rayCount = 10000;
+        this.reflectionCount = 2;
+    }
+
+    public setReflectionCount(reflectionCount: number)
+    {
+        this.reflectionCount = reflectionCount;
     }
 
     public setPlayerPos(x: number, y: number)
