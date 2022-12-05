@@ -1,8 +1,9 @@
 import { Line } from "./line";
 import {GameObject} from "./game_object";
-import {Engine, Render, World} from "matter-js";
+import {Common, Engine, Render, World} from "matter-js";
 import {KeyboardMovement} from "./keyboard_movement";
 import {GameObjectUpdater} from "./game_object_updater";
+var decomp = require('poly-decomp');
 
 export class Scene
 {
@@ -38,6 +39,8 @@ export class Scene
         });
 
         Render.run(render);
+
+        Common.setDecomp(decomp);
 
         this._movement = new KeyboardMovement();
     }

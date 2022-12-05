@@ -37,6 +37,7 @@
     "@types/matter-js": "^0.18.2",
     "gl-matrix": "^3.4.3",
     "live-server": "^1.2.2",
-    "matter-js": "^0.18.0"
+    "matter-js": "^0.18.0",
+    "poly-decomp": "^0.3.0"
   }
 }

@@ -1,5 +1,5 @@
 import {GameObject} from "./game_object";
-import {Body} from "matter-js";
+import {Body, Vector} from "matter-js";
 
 export class KeyboardMovement
 {
@@ -24,25 +24,34 @@ export class KeyboardMovement
     update(): void
     {
         const body = this._player.body;
+
         if (this._keyW)
         {
-            const forceX = Math.cos(body.angle + (Math.PI / 2)) * -0.00005;
-            const forceY = Math.sin(body.angle + (Math.PI / 2))* -0.00005;
-            Body.applyForce( body, {x: body.position.x, y: body.position.y}, {x: forceX, y: forceY});
+            const force = this.findForwardForce(0.00001);
+            Body.applyForce( body, {x: body.position.x, y: body.position.y}, {x: force.x, y: force.y});
         }
         if (this._keyS)
         {
-            Body.applyForce( body, {x: body.position.x, y: body.position.y}, {x: 0, y: 0.00005});
+            const force = this.findForwardForce(-0.00001);
+            Body.applyForce( body, {x: body.position.x, y: body.position.y}, {x: force.x, y: force.y});
         }
         if (this._keyA)
         {
-            body.torque = -0.0001;
+            body.torque = -0.00002;
         }
         if (this._keyD)
         {
-            body.torque = 0.0001;
+            body.torque = 0.00002;
             // Body.applyForce( body, {x: body.position.x, y: body.position.y - 50}, {x: 0.000001, y: 0});
         }
+    }
+
+    private findForwardForce(force: number): Vector
+    {
+        const body = this._player.body;
+        const forceX = Math.cos(body.angle + (Math.PI / 2)) * -force;
+        const forceY = Math.sin(body.angle + (Math.PI / 2))* -force;
+        return Vector.create(forceX, forceY);
     }
 
     applyForce(x: number, y: number)
