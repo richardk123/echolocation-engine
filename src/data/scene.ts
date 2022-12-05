@@ -2,7 +2,8 @@ import { Line } from "./line";
 
 export class Scene
 {
-    lines = Array<Line>();
+    lines: Line[];
+    alwaysVisibleLines: Line[];
     playerPos: Float32Array;
     rayCount: number;
     reflectionCount: number;
@@ -10,7 +11,9 @@ export class Scene
     constructor()
     {
         this.playerPos = new Float32Array([0, 0]);
-        this.rayCount = 10000;
+        this.alwaysVisibleLines = [];
+        this.lines = [];
+        this.rayCount = 100000;
         this.reflectionCount = 2;
     }
 
@@ -34,6 +37,13 @@ export class Scene
     {
         let line = new Line(x0, y0, x1, y1);
         this.lines.push(line);
+        return line;
+    }
+
+    public addAlwaysVisibleLine(x0: number, y0: number, x1: number, y1: number): Line
+    {
+        let line = new Line(x0, y0, x1, y1);
+        this.alwaysVisibleLines.push(line);
         return line;
     }
 }

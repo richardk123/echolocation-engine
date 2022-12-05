@@ -25,7 +25,7 @@ export class MainRenderer implements RendererData {
    {
         await this.setupDevice();
 
-        const clearTextureRenderer = new ClearTextureRenderer(this, this.canvas);
+        const clearTextureRenderer = new ClearTextureRenderer(this, this.scene, this.canvas);
         const echoLocationRenderer = new EcholocationRenderer(this, this.scene, clearTextureRenderer);
         const screenRenderer = new ScreenRenderer(this, clearTextureRenderer);
 
