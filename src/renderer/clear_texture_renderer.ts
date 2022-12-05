@@ -1,4 +1,4 @@
-import { Scene } from "../data/scene";
+import { Scene } from "./data/scene";
 import clearTexture_kernel from "./../shaders/clear_texture_kernel.wgsl"
 import { Renderer } from "./data/renderer";
 import { RendererData } from "./data/renderer_data";

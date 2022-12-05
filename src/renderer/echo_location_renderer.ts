@@ -1,4 +1,4 @@
-import { Scene } from "../data/scene";
+import { Scene } from "./data/scene";
 import echo_location_kernel from "./../shaders/echo_location_kernel.wgsl"
 import { Renderer } from "./data/renderer";
 import { RendererData } from "./data/renderer_data";

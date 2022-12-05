@@ -1,4 +1,4 @@
-import { Scene } from "../data/scene";
+import { Scene } from "./data/scene";
 import { EcholocationRenderer } from "./echo_location_renderer";
 import { RendererData } from "./data/renderer_data";
 import { ScreenRenderer } from "./screen_renderer";
@@ -34,7 +34,6 @@ export class MainRenderer implements RendererData {
 
     async setupDevice() 
     {
-
         //adapter: wrapper around (physical) GPU.
         //Describes features and limits
         this.adapter = <GPUAdapter> await navigator.gpu?.requestAdapter();
@@ -54,6 +53,8 @@ export class MainRenderer implements RendererData {
 
     render = (renderers: Renderer[]) => 
     {
+        // first update all objects in scene
+        this.scene.update();
 
         const commandEncoder : GPUCommandEncoder = this.device.createCommandEncoder();
 

@@ -1,27 +1,24 @@
-import { Scene } from "./data/scene";
+import { Scene } from "./renderer/data/scene";
 import { MainRenderer } from "./renderer/main_renderer";
-import {Asteroid} from "./data/asteroid";
+import {Asteroid} from "./game/asteroid";
+import {Ship} from "./game/ship";
 
 const canvas = <HTMLCanvasElement> document.getElementById("gfx-main");
 let scene = new Scene();
 
-scene.setPlayerPos(400, 300);
 scene.setRayCount(20000);
-scene.setReflectionCount(2);
+scene.setReflectionCount(3);
 
-canvas.addEventListener("mousemove", e =>
+// const a1 = new Asteroid(400, 300, 20, 10);
+// const a2 = new Asteroid(300, 300, 20, 10);
+const ship = new Ship(400, 400, 10);
+
+for (let i = 0; i < 10; i++)
 {
-    scene.setPlayerPos(e.x, e.y);
-});
-
-let line = scene.addLine(500, 100, 600, 200);
-let line3 = scene.addLine(400, 100, 400, 200);
-line3.emmiting = true;
-
-// player
-scene.addAlwaysVisibleLine(500, 500, 600, 600);
-
-new Asteroid(400, 300, 20, 10, scene);
-new Asteroid(300, 300, 20, 10, scene);
+    const a = new Asteroid(Math.random() * 80 * i, Math.random() * 60 * i, 10, 10);
+    scene.addGameObject(a);
+}
+scene.addGameObjects(ship);
+scene.setPlayer(ship);
 
 new MainRenderer(canvas, scene).initialize();

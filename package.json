@@ -33,7 +33,10 @@
     "webpack-dev-server": "^4.11.1"
   },
   "dependencies": {
+    "@types/gl-matrix": "^3.2.0",
+    "@types/matter-js": "^0.18.2",
     "gl-matrix": "^3.4.3",
-    "live-server": "^1.2.2"
+    "live-server": "^1.2.2",
+    "matter-js": "^0.18.0"
   }
 }

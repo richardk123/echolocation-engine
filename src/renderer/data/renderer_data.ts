@@ -1,4 +1,4 @@
-import { Scene } from "../../data/scene";
+import { Scene } from "./scene";
 
 export interface RendererData
 {

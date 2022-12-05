@@ -45,6 +45,7 @@ fn main(@builtin(global_invocation_id) id : vec3<u32>)
         // reflect ray if it is not sound source
         if (firstHitResult.line.soundSource == 0)
         {
+            textureStore(color_buffer, vec2<u32>(u32(firstHitResult.point.x), u32(firstHitResult.point.y)), vec4<f32>(1.0, 1.0, 1.0, 1.0));
             rayBounce(ray, firstHitResult);
         }
         // direct hit to sound source
@@ -53,15 +54,6 @@ fn main(@builtin(global_invocation_id) id : vec3<u32>)
             textureStore(color_buffer, vec2<u32>(u32(firstHitResult.point.x), u32(firstHitResult.point.y)), vec4<f32>(1.0, 0, 1.0, 1.0));
         }
     }
-
-    // textureStore(color_buffer, vec2<u32>(u32(ray.destination.x), u32(ray.destination.y)), vec4<f32>(1.0, 0, 0, 1.0));
-    // textureStore(color_buffer, vec2<u32>(u32(ray.origin.x), u32(ray.origin.y)), vec4<f32>(1.0, 1, 1, 1.0));
-
-     textureStore(color_buffer, vec2<u32>(u32(data.lines[0].p1.x), u32(data.lines[1].p1.y)), vec4<f32>(1, data.lines[0].soundSource, 1, 1));
-     textureStore(color_buffer, vec2<u32>(u32(data.lines[0].p2.x), u32(data.lines[1].p2.y)), vec4<f32>(1, data.lines[0].soundSource, 1, 1));
-
-     textureStore(color_buffer, vec2<u32>(u32(data.lines[1].p1.x), u32(data.lines[1].p1.y)), vec4<f32>(1, data.lines[1].soundSource, 1, 1));
-     textureStore(color_buffer, vec2<u32>(u32(data.lines[1].p2.x), u32(data.lines[1].p2.y)), vec4<f32>(1, data.lines[1].soundSource, 1, 1));
 }
 
 fn rayBounce(ray: Ray, rayHit: HitResult)
