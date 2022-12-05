@@ -15,7 +15,7 @@ const ship = new Ship(400, 400, 10);
 
 for (let i = 0; i < 10; i++)
 {
-    const a = new Asteroid(Math.random() * 80 * i, Math.random() * 60 * i, 10, 10);
+    const a = new Asteroid(Math.random() * 80 * i, Math.random() * 60 * i, 10, 5 + (Math.random() * 10));
     scene.addGameObject(a);
 }
 scene.addGameObjects(ship);

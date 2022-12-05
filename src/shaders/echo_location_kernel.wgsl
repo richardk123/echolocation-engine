@@ -25,8 +25,8 @@ struct Ray
 struct HitResult
 {
     hit: bool,
-    point: vec2<f32>,
-    line: Line,
+    p: vec2<f32>,
+    l: Line,
     lineIndex: u32,
 }
 
@@ -43,15 +43,15 @@ fn main(@builtin(global_invocation_id) id : vec3<u32>)
     if (firstHitResult.hit)
     {
         // reflect ray if it is not sound source
-        if (firstHitResult.line.soundSource == 0)
+        if (firstHitResult.l.soundSource == 0)
         {
-            textureStore(color_buffer, vec2<u32>(u32(firstHitResult.point.x), u32(firstHitResult.point.y)), vec4<f32>(1.0, 1.0, 1.0, 1.0));
+            textureStore(color_buffer, vec2<u32>(u32(firstHitResult.p.x), u32(firstHitResult.p.y)), vec4<f32>(1.0, 1.0, 1.0, 1.0));
             rayBounce(ray, firstHitResult);
         }
         // direct hit to sound source
         else
         {
-            textureStore(color_buffer, vec2<u32>(u32(firstHitResult.point.x), u32(firstHitResult.point.y)), vec4<f32>(1.0, 0, 1.0, 1.0));
+            textureStore(color_buffer, vec2<u32>(u32(firstHitResult.p.x), u32(firstHitResult.p.y)), vec4<f32>(1.0, 0.0, 1.0, 1.0));
         }
     }
 }
@@ -61,7 +61,7 @@ fn rayBounce(ray: Ray, rayHit: HitResult)
     var hitResult: HitResult;
     hitResult.hit = false;
 
-    for (var i: u32 = 0; i < u32(scene.reflectionCount - 1); i++)
+    for (var i: u32 = 0; i < u32(scene.reflectionCount); i++)
     {
         let ray = rayReflection(ray, rayHit);
         hitResult = findClosestIntersection(ray, rayHit.lineIndex);
@@ -72,18 +72,18 @@ fn rayBounce(ray: Ray, rayHit: HitResult)
         }
     }
 
-    if (hitResult.hit && hitResult.line.soundSource == 1)
+    if (hitResult.hit && hitResult.l.soundSource == 1)
     {
-        textureStore(color_buffer, vec2<u32>(u32(rayHit.point.x), u32(rayHit.point.y)), vec4<f32>(1.0, 1.0, 1.0, 1.0));
+        textureStore(color_buffer, vec2<u32>(u32(rayHit.p.x), u32(rayHit.p.y)), vec4<f32>(1.0, 1.0, 1.0, 1.0));
     }
 }
 
 fn rayReflection(ray: Ray, hitResult: HitResult) -> Ray
 {
-    let normal = findLineNormal(hitResult.line);
+    let normal = findLineNormal(hitResult.l);
     
-    let rayX = ray.destination.x - hitResult.point.x;
-    let rayY = ray.destination.y - hitResult.point.y;
+    let rayX = ray.destination.x - hitResult.p.x;
+    let rayY = ray.destination.y - hitResult.p.y;
 
     let dotProduct = (rayX * normal.x) + (rayY * normal.y);
 
@@ -96,7 +96,7 @@ fn rayReflection(ray: Ray, hitResult: HitResult) -> Ray
     let reflectedRayY = (ray.destination.y - (dotNormalY * 2));
 
     var reflectedRay: Ray;
-    reflectedRay.origin = hitResult.point;
+    reflectedRay.origin = hitResult.p;
     reflectedRay.destination = vec2<f32>(reflectedRayX, reflectedRayY);
 
     return reflectedRay;
@@ -119,13 +119,13 @@ fn findClosestIntersection(ray: Ray, ignoredLineIndex: u32) -> HitResult
         let hitResult: HitResult = lineIntersection(ray, data.lines[i]);
         if (hitResult.hit)
         {
-            let distance = distanceSquared(hitResult.point, ray.origin);
+            let distance = distanceSquared(hitResult.p, ray.origin);
             if (distance < closestDistance)
             {
                 closestDistance = distance;
                 closestHitResult = hitResult;
                 closestHitResult.hit = true;
-                closestHitResult.line = data.lines[i];
+                closestHitResult.l = data.lines[i];
             }
         }
     }
@@ -135,14 +135,14 @@ fn findClosestIntersection(ray: Ray, ignoredLineIndex: u32) -> HitResult
 
 //Line intersection algorithm
 //Based off Andre LeMothe's algorithm in "Tricks of the Windows Game Programming Gurus".
-fn lineIntersection(ray: Ray, line: Line) -> HitResult
+fn lineIntersection(ray: Ray, l: Line) -> HitResult
 {
     var hitResult: HitResult;
 
     let p1 = ray.origin;
     let p2 = ray.destination;
-    let p3 = line.p1;
-    let p4 = line.p2;
+    let p3 = l.p1;
+    let p4 = l.p2;
 
     //Line 1 Vector
     let v1 = p2 - p1;
@@ -153,7 +153,7 @@ fn lineIntersection(ray: Ray, line: Line) -> HitResult
     //Cross of vectors
     let d = cross2D(v1,v2);
     
-    //Difference between start points
+    //Difference between start ps
     let LA_delta = p1 - p3;
     
     //Percentage v1 x LA_delta is along v1 x v2
@@ -167,7 +167,7 @@ fn lineIntersection(ray: Ray, line: Line) -> HitResult
     if (s >= 0.0 && s <= 1.0 && t >= 0.0 && t <= 1.0)
     {
         //Projection
-        hitResult.point = vec2<f32>(p1.x + (t * v1.x), p1.y + (t * v1.y));
+        hitResult.p = vec2<f32>(p1.x + (t * v1.x), p1.y + (t * v1.y));
         hitResult.hit = true;
         return hitResult;
     }
@@ -205,10 +205,10 @@ fn distanceSquared(p1: vec2<f32>, p2: vec2<f32>) -> f32
     return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y);
 }
 
-fn findLineNormal(line: Line) -> vec2<f32>
+fn findLineNormal(l: Line) -> vec2<f32>
 {
-    let normalY = line.p2.x - line.p1.x;
-    let normalX = line.p1.y - line.p2.y;
+    let normalY = l.p2.x - l.p1.x;
+    let normalX = l.p1.y - l.p2.y;
     let normalLength = sqrt((normalX * normalX) + (normalY * normalY));
 
     return vec2<f32>(normalX / normalLength, normalY / normalLength);

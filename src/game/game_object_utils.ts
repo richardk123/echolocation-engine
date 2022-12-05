@@ -18,6 +18,14 @@ export abstract class GameObjectUtils
             }
             lines.push(line);
         }
+
+        let line = new Line(vertices[0].x, vertices[0].y, vertices[vertices.length - 1].x, vertices[vertices.length - 1].y);
+        if (emiting)
+        {
+            line.emmiting = emiting;
+        }
+        lines.push(line);
+
         return lines;
     }
 
