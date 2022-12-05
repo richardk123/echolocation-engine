@@ -9,9 +9,6 @@ export interface GameObject
     // echolocation will not apply and line will be always rendered
     get isAlwaysVisible(): boolean;
 
-    // update lines positions
-    update(): void;
-
     // create physical body
     get body(): Body
 }

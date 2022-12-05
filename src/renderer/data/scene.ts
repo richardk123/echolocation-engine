@@ -2,11 +2,12 @@ import { Line } from "./line";
 import {GameObject} from "./game_object";
 import {Engine, Render, World} from "matter-js";
 import {KeyboardMovement} from "./keyboard_movement";
+import {GameObjectUpdater} from "./game_object_updater";
 
 export class Scene
 {
     private _player: GameObject;
-    private _gameObjects: GameObject[] = [];
+    private _gameObjectUpdaters: GameObjectUpdater[] = [];
     private _rayCount: number = 100000;
     private _reflectionCount: number = 2;
     private _engine: Engine;
@@ -52,7 +53,7 @@ export class Scene
     {
         this._movement.update();
         Engine.update(this._engine);
-        this._gameObjects.forEach(go => go.update());
+        this._gameObjectUpdaters.forEach(gou => gou.update());
     }
 
     // position of player
@@ -71,7 +72,7 @@ export class Scene
     public addGameObject(gameObject: GameObject)
     {
         World.add(this._world, gameObject.body);
-        this._gameObjects.push(gameObject);
+        this._gameObjectUpdaters.push(new GameObjectUpdater(gameObject));
     }
 
     public addGameObjects(...gameObjects: GameObject[])
@@ -84,12 +85,12 @@ export class Scene
 
     public get lines(): Line[]
     {
-        return this._gameObjects.filter(o => !o.isAlwaysVisible).flatMap(o => o.lines);
+        return this._gameObjectUpdaters.map(gou => gou.gameObject).filter(o => !o.isAlwaysVisible).flatMap(o => o.lines);
     }
 
     public get alwaysVisibleLines(): Line[]
     {
-        return this._gameObjects.filter(o => o.isAlwaysVisible).flatMap(o => o.lines);
+        return this._gameObjectUpdaters.map(gou => gou.gameObject).filter(o => o.isAlwaysVisible).flatMap(o => o.lines);
     }
 
     public get playerPos(): Float32Array
