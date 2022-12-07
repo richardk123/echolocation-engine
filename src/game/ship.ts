@@ -37,4 +37,25 @@ export class Ship implements GameObject
     {
         return this._body;
     }
+
+    update(): void
+    {
+        if (this.body.position.x < 0)
+        {
+            Body.setPosition(this.body, Vector.create(800, this.body.position.y));
+        }
+        if (this.body.position.y < 0)
+        {
+            Body.setPosition(this.body, Vector.create(this.body.position.x, 600));
+        }
+
+        if (this.body.position.x > 800)
+        {
+            Body.setPosition(this.body, Vector.create(0, this.body.position.y));
+        }
+        if (this.body.position.y > 600)
+        {
+            Body.setPosition(this.body, Vector.create(this.body.position.x, 0));
+        }
+    }
 }

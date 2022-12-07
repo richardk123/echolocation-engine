@@ -27,22 +27,21 @@ export class KeyboardMovement
 
         if (this._keyW)
         {
-            const force = this.findForwardForce(0.00001);
+            const force = this.findForwardForce(0.00002);
             Body.applyForce( body, {x: body.position.x, y: body.position.y}, {x: force.x, y: force.y});
         }
         if (this._keyS)
         {
-            const force = this.findForwardForce(-0.00001);
+            const force = this.findForwardForce(-0.00002);
             Body.applyForce( body, {x: body.position.x, y: body.position.y}, {x: force.x, y: force.y});
         }
         if (this._keyA)
         {
-            body.torque = -0.00002;
+            body.torque = -0.00004;
         }
         if (this._keyD)
         {
-            body.torque = 0.00002;
-            // Body.applyForce( body, {x: body.position.x, y: body.position.y - 50}, {x: 0.000001, y: 0});
+            body.torque = 0.00004;
         }
     }
 

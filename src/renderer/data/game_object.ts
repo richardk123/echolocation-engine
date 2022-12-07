@@ -11,4 +11,7 @@ export interface GameObject
 
     // create physical body
     get body(): Body
+
+    // called each frame
+    update(): void;
 }

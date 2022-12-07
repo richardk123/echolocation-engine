@@ -10,18 +10,27 @@ export class Asteroid implements GameObject
     private _lines: Line[] = [];
     private _body: Body;
 
-    constructor(x: number, y: number, vertCount: number, radius: number)
+    constructor(x: number, y: number, vertCount: number, radius: number, emiting: boolean)
     {
         const vertices: Vector[] = [];
 
         for (let i = 0; i < vertCount; i++)
         {
             const angleP1 = ((Math.PI * 2) / vertCount) * i;
-            vertices.push(Vector.create(x + Math.sin(angleP1) * radius, y + Math.cos(angleP1) * radius));
+            const randRadius = this.randomIntFromInterval(radius / 2, radius);
+            vertices.push(Vector.create(x + Math.sin(angleP1) * randRadius, y + Math.cos(angleP1) * randRadius));
         }
 
-        this._lines = GameObjectUtils.createLinesFromVertices(vertices, true);
-        this._body = Bodies.fromVertices(x, y, [vertices]);
+        this._lines = GameObjectUtils.createLinesFromVertices(vertices, emiting);
+        this._body = Bodies.fromVertices(x, y, [vertices], {frictionAir: 0, friction: 0, restitution: 1});
+        Body.setVelocity(this._body, Vector.create((Math.random() * 2) - 1, (Math.random() * 2) - 1));
+    }
+
+
+
+    randomIntFromInterval(min: number, max: number)
+    {
+        return Math.floor(Math.random() * (max - min + 1) + min)
     }
 
     get isAlwaysVisible(): boolean
@@ -39,4 +48,24 @@ export class Asteroid implements GameObject
         return this._body;
     }
 
+    update(): void
+    {
+        if (this.body.position.x < 0)
+        {
+            Body.setPosition(this.body, Vector.create(800, this.body.position.y));
+        }
+        if (this.body.position.y < 0)
+        {
+            Body.setPosition(this.body, Vector.create(this.body.position.x, 600));
+        }
+
+        if (this.body.position.x > 800)
+        {
+            Body.setPosition(this.body, Vector.create(0, this.body.position.y));
+        }
+        if (this.body.position.y > 600)
+        {
+            Body.setPosition(this.body, Vector.create(this.body.position.x, 0));
+        }
+    }
 }

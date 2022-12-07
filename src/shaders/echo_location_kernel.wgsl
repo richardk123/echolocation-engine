@@ -28,6 +28,7 @@ struct HitResult
     p: vec2<f32>,
     l: Line,
     lineIndex: u32,
+    distanceSquared: f32,
 }
 
 @group(0) @binding(0) var color_buffer: texture_storage_2d<rgba8unorm, write>;
@@ -45,13 +46,17 @@ fn main(@builtin(global_invocation_id) id : vec3<u32>)
         // reflect ray if it is not sound source
         if (firstHitResult.l.soundSource == 0)
         {
-            textureStore(color_buffer, vec2<u32>(u32(firstHitResult.p.x), u32(firstHitResult.p.y)), vec4<f32>(1.0, 1.0, 1.0, 1.0));
+            let alfa = 1 / (sqrt(firstHitResult.distanceSquared) / 100);
+            let color = vec4<f32>(1.0, 1.0, 1.0, 1.0) * alfa;
+            textureStore(color_buffer, vec2<u32>(u32(firstHitResult.p.x), u32(firstHitResult.p.y)), color);
             rayBounce(ray, firstHitResult);
         }
         // direct hit to sound source
         else
         {
-            textureStore(color_buffer, vec2<u32>(u32(firstHitResult.p.x), u32(firstHitResult.p.y)), vec4<f32>(1.0, 0.0, 1.0, 1.0));
+            let alfa = 1 / (sqrt(firstHitResult.distanceSquared) / 100);
+            let color = vec4<f32>(1.0, 1.0, 1.0, 1.0) * alfa;
+            textureStore(color_buffer, vec2<u32>(u32(firstHitResult.p.x), u32(firstHitResult.p.y)), color);
         }
     }
 }
@@ -60,21 +65,24 @@ fn rayBounce(ray: Ray, rayHit: HitResult)
 {
     var hitResult: HitResult;
     hitResult.hit = false;
+    var totalDistanceSquared = rayHit.distanceSquared;
 
     for (var i: u32 = 0; i < u32(scene.reflectionCount); i++)
     {
         let ray = rayReflection(ray, rayHit);
         hitResult = findClosestIntersection(ray, rayHit.lineIndex);
-
         if (!hitResult.hit)
         {
             break;
         }
+        totalDistanceSquared += hitResult.distanceSquared;
     }
 
     if (hitResult.hit && hitResult.l.soundSource == 1)
     {
-        textureStore(color_buffer, vec2<u32>(u32(rayHit.p.x), u32(rayHit.p.y)), vec4<f32>(1.0, 1.0, 1.0, 1.0));
+        let alfa = 1 / (sqrt(totalDistanceSquared) / 100);
+        let color = vec4<f32>(1.0, 1.0, 1.0, 1.0) * alfa;
+        textureStore(color_buffer, vec2<u32>(u32(rayHit.p.x), u32(rayHit.p.y)), color);
     }
 }
 
@@ -129,7 +137,7 @@ fn findClosestIntersection(ray: Ray, ignoredLineIndex: u32) -> HitResult
             }
         }
     }
-
+    closestHitResult.distanceSquared = closestDistance;
     return closestHitResult;
 }
 

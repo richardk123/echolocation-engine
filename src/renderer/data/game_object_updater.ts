@@ -52,6 +52,8 @@ export class GameObjectUpdater
         this._prevAngle = this._gameObject.body.angle;
         this._prevPositionX = this._gameObject.body.position.x;
         this._prevPositionY = this._gameObject.body.position.y;
+
+        this._gameObject.update();
     }
 
     get gameObject(): GameObject
