@@ -4,6 +4,11 @@ struct Line {
     soundSource: f32,
 }
 
+struct SoundSource {
+    position: vec2<f32>,
+    intensity: f32,
+}
+
 struct Data {
     lines: array<Line>,
 }

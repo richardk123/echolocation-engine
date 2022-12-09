@@ -2,22 +2,27 @@ import screen_shader from "./../shaders/screen_shader.wgsl"
 import { Renderer } from "./data/renderer";
 import { RendererData } from "./data/renderer_data";
 import { ScreenTextureData } from "./data/screen_texture_data";
+import {Scene} from "./data/scene";
 
 export class ScreenRenderer implements Renderer
 {
     rendererData: RendererData;
+    private scene: Scene;
 
     // Assets
     sampler: GPUSampler;
     screen_texture_data: ScreenTextureData;
+    line_buffer: GPUBuffer;
+    scene_parameters: GPUBuffer;
 
     // Pipeline objects
     screen_pipeline: GPURenderPipeline;
     screen_bind_group: GPUBindGroup;
 
-    constructor(rendererData: RendererData, screen_texture_data: ScreenTextureData)
+    constructor(rendererData: RendererData, scene: Scene, screen_texture_data: ScreenTextureData)
     {
         this.rendererData = rendererData;
+        this.scene = scene;
         this.screen_texture_data = screen_texture_data;
 
         this.createAssets();
@@ -36,6 +41,21 @@ export class ScreenRenderer implements Renderer
         };
 
         this.sampler = this.rendererData.device.createSampler(samplerDescriptor);
+
+        const linesBufferDescriptor: GPUBufferDescriptor = {
+            size: 16 * this.scene.alwaysVisibleLines.length,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        };
+
+        this.line_buffer = this.rendererData.device.createBuffer(linesBufferDescriptor);
+
+        const sceneParameterBufferDescriptor: GPUBufferDescriptor = {
+            size: 32,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        };
+        this.scene_parameters = this.rendererData.device.createBuffer(
+            sceneParameterBufferDescriptor
+        );
     }
 
     private makePipeline() 
@@ -52,6 +72,21 @@ export class ScreenRenderer implements Renderer
                     visibility: GPUShaderStage.FRAGMENT,
                     texture: {}
                 },
+                {
+                    binding: 2,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    buffer: {
+                        type: "read-only-storage",
+                        hasDynamicOffset: false
+                    }
+                },
+                {
+                    binding: 3,
+                    visibility: GPUShaderStage.FRAGMENT,
+                    buffer: {
+                        type: "uniform",
+                    }
+                },
             ]
 
         });
@@ -66,7 +101,19 @@ export class ScreenRenderer implements Renderer
                 {
                     binding: 1,
                     resource: this.screen_texture_data.color_buffer_view
-                }
+                },
+                {
+                    binding: 2,
+                    resource: {
+                        buffer: this.line_buffer
+                    }
+                },
+                {
+                    binding: 3,
+                    resource: {
+                        buffer: this.scene_parameters,
+                    }
+                },
             ]
         });
 
@@ -103,6 +150,9 @@ export class ScreenRenderer implements Renderer
 
     public render(commandEncoder : GPUCommandEncoder)
     {
+        this.setLines();
+        this.setSceneData();
+
         const textureView : GPUTextureView = this.rendererData.context.getCurrentTexture().createView();
         const renderpass : GPURenderPassEncoder = commandEncoder.beginRenderPass({
             colorAttachments: [{
@@ -118,5 +168,34 @@ export class ScreenRenderer implements Renderer
         renderpass.draw(6, 1, 0, 0);
         
         renderpass.end();
+    }
+
+
+    private setLines()
+    {
+        const dataCount = 4;
+        const lineData: Float32Array = new Float32Array(dataCount * this.scene.alwaysVisibleLines.length);
+        for (let i = 0; i < this.scene.alwaysVisibleLines.length; i++)
+        {
+            lineData[dataCount*i] = this.scene.alwaysVisibleLines[i].x0;
+            lineData[dataCount*i + 1] = this.scene.alwaysVisibleLines[i].y0;
+            lineData[dataCount*i + 2] = this.scene.alwaysVisibleLines[i].x1;
+            lineData[dataCount*i + 3] = this.scene.alwaysVisibleLines[i].y1;
+        }
+
+        this.rendererData.device.queue.writeBuffer(this.line_buffer, 0, lineData, 0, dataCount * this.scene.alwaysVisibleLines.length);
+    }
+
+    private setSceneData()
+    {
+        this.rendererData.device.queue.writeBuffer(
+            this.scene_parameters, 0,
+            new Int32Array(
+                [
+                    this.scene.alwaysVisibleLines.length,
+                    0,
+                ]
+            ), 0, 2
+        )
     }
 }
