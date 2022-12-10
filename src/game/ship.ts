@@ -2,7 +2,7 @@ import {Line} from "../renderer/data/line";
 import {GameObject} from "../renderer/data/game_object";
 import {Bodies, Body, Vector} from "matter-js";
 import {GameObjectUtils} from "./game_object_utils";
-import {vec2} from "gl-matrix";
+import {SoundSource} from "../renderer/data/sound_source";
 
 export class Ship implements GameObject
 {
@@ -31,6 +31,11 @@ export class Ship implements GameObject
     get lines(): Line[]
     {
         return this._lines;
+    }
+
+    get soundSources(): SoundSource[]
+    {
+        return [new SoundSource(this.body.position.x, this.body.position.y, .5)];
     }
 
     get body(): Body

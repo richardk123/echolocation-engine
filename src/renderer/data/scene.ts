@@ -3,17 +3,17 @@ import {GameObject} from "./game_object";
 import {Common, Engine, Render, World} from "matter-js";
 import {KeyboardMovement} from "./keyboard_movement";
 import {GameObjectUpdater} from "./game_object_updater";
+import {SoundSource} from "./sound_source";
 var decomp = require('poly-decomp');
 
 export class Scene
 {
-    private _player: GameObject;
+    private _soundSources: SoundSource[] = [];
     private _gameObjectUpdaters: GameObjectUpdater[] = [];
-    private _rayCount: number = 100000;
-    private _reflectionCount: number = 2;
     private _engine: Engine;
     private _world: World;
     private _movement: KeyboardMovement;
+
     constructor()
     {
         // create engine
@@ -45,12 +45,6 @@ export class Scene
         this._movement = new KeyboardMovement();
     }
 
-    // how many times ray reflects
-    public setReflectionCount(reflectionCount: number)
-    {
-        this._reflectionCount = reflectionCount;
-    }
-
     // update all gameobjects
     public update(): void
     {
@@ -62,14 +56,7 @@ export class Scene
     // position of player
     public setPlayer(gameObject: GameObject)
     {
-        this._player = gameObject;
         this._movement.player = gameObject;
-    }
-
-    // number of rays to simulate outwards player position
-    public setRayCount(count: number)
-    {
-        this._rayCount = count;
     }
 
     public addGameObject(gameObject: GameObject)
@@ -86,6 +73,12 @@ export class Scene
         });
     }
 
+
+    public get soundSources(): SoundSource[]
+    {
+        return this._gameObjectUpdaters.flatMap(gou => gou.gameObject.soundSources);
+    }
+
     public get lines(): Line[]
     {
         return this._gameObjectUpdaters.map(gou => gou.gameObject).filter(o => !o.isAlwaysVisible).flatMap(o => o.lines);
@@ -94,20 +87,5 @@ export class Scene
     public get alwaysVisibleLines(): Line[]
     {
         return this._gameObjectUpdaters.map(gou => gou.gameObject).filter(o => o.isAlwaysVisible).flatMap(o => o.lines);
-    }
-
-    public get playerPos(): Float32Array
-    {
-        return new Float32Array([this._player.body.position.x, this._player.body.position.y]);
-    }
-
-    public get rayCount(): number
-    {
-        return this._rayCount;
-    }
-
-    public get reflectionCount(): number
-    {
-        return this._reflectionCount;
     }
 }

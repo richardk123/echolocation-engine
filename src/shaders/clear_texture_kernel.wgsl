@@ -1,15 +1,3 @@
-struct Line {
-    p1: vec2<f32>,
-    p2: vec2<f32>,
-}
-
-struct Data {
-    lines: array<Line>,
-}
-struct SceneData {
-    lineCount: i32,
-}
-
 @group(0) @binding(0) var color_buffer: texture_storage_2d<rgba8unorm, write>;
 
 @compute @workgroup_size(1,1,1)

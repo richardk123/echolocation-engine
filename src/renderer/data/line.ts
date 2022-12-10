@@ -4,17 +4,7 @@ export class Line
 
     constructor(x0: number, y0: number, x1: number, y1: number)
     {
-        this.data = new Float32Array([x0, y0, x1, y1, 0]);
-    }
-
-    get emmiting(): boolean
-    {
-        return this.data[4] == 0.0;
-    }
-
-    set emmiting(value: boolean)
-    {
-        this.data[4] = value ? 1.0 : 0.0;
+        this.data = new Float32Array([x0, y0, x1, y1]);
     }
 
     get x0(): number

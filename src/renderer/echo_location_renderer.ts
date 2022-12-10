@@ -13,6 +13,7 @@ export class EcholocationRenderer implements Renderer
     screen_texture_data: ScreenTextureData;
     line_buffer: GPUBuffer;
     scene_parameters: GPUBuffer;
+    sound_source_buffer: GPUBuffer;
 
     // Pipeline objects
     echo_location_pipeline: GPUComputePipeline;
@@ -32,19 +33,26 @@ export class EcholocationRenderer implements Renderer
     private createAssets()
     {
         const linesBufferDescriptor: GPUBufferDescriptor = {
-            size: 24 * this.scene.lines.length,
+            size: 16 * this.scene.lines.length,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
         };
 
         this.line_buffer = this.rendererData.device.createBuffer(linesBufferDescriptor);
 
-        const scaneParameterBufferDescriptor: GPUBufferDescriptor = {
-            size: 32,
+        const sceneParameterBufferDescriptor: GPUBufferDescriptor = {
+            size: 16,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         };
         this.scene_parameters = this.rendererData.device.createBuffer(
-            scaneParameterBufferDescriptor
+            sceneParameterBufferDescriptor
         );
+
+        const soundSourceBufferDescriptor: GPUBufferDescriptor = {
+            size: 16 * this.scene.soundSources.length,
+            usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        };
+
+        this.sound_source_buffer = this.rendererData.device.createBuffer(soundSourceBufferDescriptor);
     }
 
     private makePipeline()
@@ -72,6 +80,14 @@ export class EcholocationRenderer implements Renderer
                     binding: 2,
                     visibility: GPUShaderStage.COMPUTE,
                     buffer: {
+                        type: "read-only-storage",
+                        hasDynamicOffset: false
+                    }
+                },
+                {
+                    binding: 3,
+                    visibility: GPUShaderStage.COMPUTE,
+                    buffer: {
                         type: "uniform",
                     }
                 },
@@ -93,6 +109,12 @@ export class EcholocationRenderer implements Renderer
                 },
                 {
                     binding: 2,
+                    resource: {
+                        buffer: this.sound_source_buffer,
+                    }
+                },
+                {
+                    binding: 3,
                     resource: {
                         buffer: this.scene_parameters,
                     }
@@ -120,31 +142,46 @@ export class EcholocationRenderer implements Renderer
     {
         this.setLines();
         this.setSceneData();
+        this.setSoundSources();
 
         const echo_location_pass : GPUComputePassEncoder = commandEncoder.beginComputePass();
         echo_location_pass.setPipeline(this.echo_location_pipeline);
         echo_location_pass.setBindGroup(0, this.echo_location_bind_group);
         
-        const workerCount = this.rendererData.scene.rayCount;
-        echo_location_pass.dispatchWorkgroups(workerCount, 1, 1);
+        echo_location_pass.dispatchWorkgroups(800, 600, 1);
         echo_location_pass.end();
     }
 
     private setLines()
     {
-        const dataCount = 6;
+        const dataCount = 4;
         const lineData: Float32Array = new Float32Array(dataCount * this.scene.lines.length);
         for (let i = 0; i < this.scene.lines.length; i++) 
         {
-            lineData[dataCount*i] = this.scene.lines[i].x0;
-            lineData[dataCount*i + 1] = this.scene.lines[i].y0;
-            lineData[dataCount*i + 2] = this.scene.lines[i].x1;
-            lineData[dataCount*i + 3] = this.scene.lines[i].y1;
-            lineData[dataCount*i + 4] = this.scene.lines[i].data[4];
-            lineData[dataCount*i + 5] = 0;
+            lineData[dataCount * i + 0] = this.scene.lines[i].x0;
+            lineData[dataCount * i + 1] = this.scene.lines[i].y0;
+            lineData[dataCount * i + 2] = this.scene.lines[i].x1;
+            lineData[dataCount * i + 3] = this.scene.lines[i].y1;
         }
 
-        this.rendererData.device.queue.writeBuffer(this.line_buffer, 0, lineData, 0, dataCount * this.scene.lines.length);
+        this.rendererData.device.queue.writeBuffer(this.line_buffer, 0, lineData, 0,
+            dataCount * this.scene.lines.length);
+    }
+
+    private setSoundSources()
+    {
+        const dataCount = 4;
+        const soundSourceData: Float32Array = new Float32Array(dataCount * this.scene.soundSources.length);
+        for (let i = 0; i < this.scene.soundSources.length; i++)
+        {
+            soundSourceData[dataCount * i + 0] = this.scene.soundSources[i].x;
+            soundSourceData[dataCount * i + 1] = this.scene.soundSources[i].y;
+            soundSourceData[dataCount * i + 2] = this.scene.soundSources[i].intensity;
+            soundSourceData[dataCount * i + 3] = 0;
+        }
+
+        this.rendererData.device.queue.writeBuffer(this.sound_source_buffer, 0, soundSourceData, 0,
+            dataCount * this.scene.soundSources.length);
     }
 
     private setSceneData()
@@ -153,16 +190,12 @@ export class EcholocationRenderer implements Renderer
             this.scene_parameters, 0,
             new Int32Array(
                 [
-                    this.scene.playerPos[0],
-                    this.scene.playerPos[1],
                     this.rendererData.canvas.width,
                     this.rendererData.canvas.height,
-                    this.scene.rayCount,
                     this.scene.lines.length,
-                    this.scene.reflectionCount,
-                    0
+                    this.scene.soundSources.length,
                 ]
-            ), 0, 8
+            ), 0, 4
         )
     }
 }

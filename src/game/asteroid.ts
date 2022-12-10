@@ -3,14 +3,14 @@ import {Scene} from "../renderer/data/scene";
 import {GameObject} from "../renderer/data/game_object";
 import {Bodies, Body, Vector} from "matter-js";
 import {GameObjectUtils} from "./game_object_utils";
-import gl, {vec2} from 'gl-matrix';
+import {SoundSource} from "../renderer/data/sound_source";
 
 export class Asteroid implements GameObject
 {
     private _lines: Line[] = [];
     private _body: Body;
 
-    constructor(x: number, y: number, vertCount: number, radius: number, emiting: boolean)
+    constructor(x: number, y: number, vertCount: number, radius: number)
     {
         const vertices: Vector[] = [];
 
@@ -21,12 +21,10 @@ export class Asteroid implements GameObject
             vertices.push(Vector.create(x + Math.sin(angleP1) * randRadius, y + Math.cos(angleP1) * randRadius));
         }
 
-        this._lines = GameObjectUtils.createLinesFromVertices(vertices, emiting);
+        this._lines = GameObjectUtils.createLinesFromVertices(vertices);
         this._body = Bodies.fromVertices(x, y, [vertices], {frictionAir: 0, friction: 0, restitution: 1});
         Body.setVelocity(this._body, Vector.create((Math.random() * 2) - 1, (Math.random() * 2) - 1));
     }
-
-
 
     randomIntFromInterval(min: number, max: number)
     {
@@ -41,6 +39,11 @@ export class Asteroid implements GameObject
     get lines(): Line[]
     {
         return this._lines;
+    }
+
+    get soundSources(): SoundSource[]
+    {
+        return [];
     }
 
     get body(): Body

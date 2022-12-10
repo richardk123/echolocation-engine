@@ -51,7 +51,7 @@ fn vert_main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
 fn frag_main(@location(0) coord : vec2<f32>) -> @location(0) vec4<f32> {
 
     let result = textureSample(color_buffer, screen_sampler, coord);;
-    let color = findColor(vec2(coord.x * data.sc, coord.y * 600));
+    let color = findColor(vec2(coord.x * 800, coord.y * 600));
 
     if (color != 0)
     {
